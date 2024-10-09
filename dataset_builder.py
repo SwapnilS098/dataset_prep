@@ -125,15 +125,35 @@ def test_train_builder(dataset_path,gray,ratio):
         test_path=os.path.join(dataset_path,"test")
         
     if gray==False:
+        #not required to open the file if simple moving from 1 dir to another
+        
+        #destination_path=os.path.join(test_path,image)
+        #os.rename(source_path,destination_path)
         for image in tqdm(images):
-            img=Image.open(os.path.join(dataset_path,image))
+            #img=Image.open(os.path.join(dataset_path,image))
+            source_path=os.path.join(dataset_path,image)
+            
             if test_count>0:
-                img.save(os.path.join(test_path,image)) #saving the images in the original format
+                #img.save(os.path.join(test_path,image)) #saving the images in the original format
+                destination_path=os.path.join(test_path,image)
+                if os.path.exists(destination_path):
+                    print(image,"File already exists")
+                    continue
+                else:
+                    os.rename(source_path,destination_path)
                 test_count-=1
+                
             else: #saving the images in the train directory
-                img.save(os.path.join(train_path,image))
+                destination_path=os.path.join(train_path,image)
+                #img.save(os.path.join(train_path,image))
+                if os.path.exists(destination_path):
+                    print(image,"File already exists")
+                    continue
+                else:
+                    os.rename(source_path,destination_path)
                 
     else: #make the gray dataset
+        #here it is necessary to open the file and convert it to gray scale
         for image in tqdm(images):
             img=Image.open(os.path.join(dataset_path,image)).convert("L")
             if test_count>0:
@@ -144,7 +164,36 @@ def test_train_builder(dataset_path,gray,ratio):
                 
     print("Test and Train dataset created at: ",dataset_path)
     
+def reverse_test_train_builder(dataset_path):
+    """
+    function to reverse the test and train split and create the directory
+    containing all the test and train images in the same directory.
+    """
+    if os.path.exists(os.path.join(dataset_path,"train")) and os.path.exists(os.path.join(dataset_path,"test")):
+        train_path=os.path.join(dataset_path,"train")        
+        test_path=os.path.join(dataset_path,"test")
         
+    print("Train and test path exists in the directory")
+    
+    #get the list of images in the test and the train direcotry
+    test_images=file_handling(test_path)
+    train_images=file_handling(train_path)
+    
+    for image in test_images:
+        source_path=os.path.join(test_path,image)
+        destination_path=os.path.join(dataset_path,image)
+        os.rename(source_path,destination_path)
+    
+    for image in train_images:
+        source_path=os.path.join(train_path,image)
+        destination_path=os.path.join(dataset_path,image)
+        os.rename(source_path,destination_path)
+        
+    #remove the test and train directory
+    os.rmdir(test_path)
+    os.rmdir(train_path)
+    
+    
 def main(args):
     print(type(args.combine),type(args.test_train_builder),type(args.gray))
     print(args.combine,args.test_train_builder,args.gray)
@@ -159,6 +208,9 @@ def main(args):
         test_train_builder(args.image_dataset_path,args.gray,args.ratio)
     elif args.test_train_builder==True and args.gray==False:
         test_train_builder(args.image_dataset_path,args.gray,args.ratio)
+        
+    if args.reverse_test_train_builder==True:
+        reverse_test_train_builder(args.image_dataset_path)
         
 
     
@@ -175,6 +227,7 @@ if __name__ == "__main__":
     parser.add_argument("--test_train_builder",action="store_true",help="Make the test and train split of the dataset")
     parser.add_argument("--gray",action="store_true",default=False,help="Convert the images to gray scale")
     parser.add_argument("--ratio",type=float,default=0.2,help="Ratio of the test and the train split between 0.1 to 1")
+    parser.add_argument("--reverse_test_train_builder",action="store_true",help="Reverse the test and the train split")
     
     args=parser.parse_args()
     main(args)
