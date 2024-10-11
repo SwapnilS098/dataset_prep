@@ -193,9 +193,37 @@ def reverse_test_train_builder(dataset_path):
     os.rmdir(test_path)
     os.rmdir(train_path)
     
+def make_gray_dataset(dataset_path,gray_dataset_path):
+    """
+    Function to make a gray dataset from the original dataset at the 
+    gray dataset path.
+    
+    """
+    print("Making the gray dataset")
+    #check if the dataset path exists
+    if not os.path.exists(dataset_path):
+        print("Dataset path does not exists")
+        return
+    
+    #get the images list
+    images=file_handling(dataset_path)
+    if len(images)==0:
+        print("No images found in the dataset")
+        return
+    
+    #checking if the gray dataset path exists
+    if not os.path.exists(gray_dataset_path):
+        os.makedirs(gray_dataset_path)
+        print("Gray dataset path created at: ",gray_dataset_path)
+        
+    #converting the images to gray scale
+    for image in tqdm(images):
+        img=Image.open(os.path.join(dataset_path,image)).convert("L")
+        img.save(os.path.join(gray_dataset_path,image))
+        
+    print("Gray dataset created at: ",gray_dataset_path)
     
 def main(args):
-    print(type(args.combine),type(args.test_train_builder),type(args.gray))
     print(args.combine,args.test_train_builder,args.gray)
     
     if args.combine==True and args.gray==True:
@@ -212,6 +240,8 @@ def main(args):
     if args.reverse_test_train_builder==True:
         reverse_test_train_builder(args.image_dataset_path)
         
+    if args.gray_dataset_path!=None:
+        make_gray_dataset(args.image_dataset_path,args.gray_dataset_path)
 
     
     
@@ -223,6 +253,7 @@ if __name__ == "__main__":
     parser.add_argument("--image_dataset_path",type=str,help="Path to the original image dataset")
     parser.add_argument("--augmented_dataset_path",type=str,help="Path to the augmented image dataset")
     parser.add_argument("--fine_tuning_dataset_path",type=str,help="Path to save the fine tuning dataset")
+    parser.add_argument("--gray_dataset_path",type=str,help="Path to save the gray dataset")
     parser.add_argument("--combine",action='store_true',help="Combine the original and the augmented dataset")
     parser.add_argument("--test_train_builder",action="store_true",help="Make the test and train split of the dataset")
     parser.add_argument("--gray",action="store_true",default=False,help="Convert the images to gray scale")
@@ -233,6 +264,4 @@ if __name__ == "__main__":
     main(args)
     
     
-    #image_dataset_path=r"C:\Swapnil\Narrowband_DRONE\Datasets\3_fpv_direct_20m_dynamic_3280_color"
-    #augmented_dataset_path=r"C:\Swapnil\Narrowband_DRONE\Datasets\Augmented"
-    #fine_tuning_dataset_path=r"C:\Swapnil\Narrowband_DRONE\Datasets\fine_tuning_image_dataset"
+
